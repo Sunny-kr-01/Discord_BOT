@@ -36,3 +36,5 @@ const interactionEvent = require('./events/interactionCreate');
 client.on('interactionCreate', i => interactionEvent(client, i));
 
 client.login(process.env.Bot_TOKEN);
+
+
