@@ -18,7 +18,7 @@ module.exports = {
 
         const answer = await askAI(question);
 
-        const chunks = answer.match(/[\s\S]{1,2000}/g);
+        const chunks = answer.match(/[\s\S]{1,2000}/g) || ["No response"];
 
         await interaction.editReply(chunks.shift());
 

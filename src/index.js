@@ -29,11 +29,22 @@ for (const file of slashFiles) {
 }
 
 // Events
-client.once('ready', () => readyEvent(client));
+// client.once('ready', () => readyEvent(client));
+client.once("clientReady", () => {
+  console.log("Bot is ready");
+});
 client.on('messageCreate', message => messageEvent(client, message));
 
 const interactionEvent = require('./events/interactionCreate');
 client.on('interactionCreate', i => interactionEvent(client, i));
+
+process.on("unhandledRejection", (error) => {
+  console.error("Unhandled promise rejection:", error);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception:", error);
+});
 
 client.login(process.env.Bot_TOKEN);
 
