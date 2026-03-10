@@ -1,29 +1,38 @@
 const { GoogleGenAI } = require("@google/genai");
+const {getChat}=require('./memory');
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY
 });
 
-async function askAI(prompt, retries = 2) {
+async function askAI(userId,prompt, retries = 2) {
   try {
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: prompt
-    });
+  const chat = getChat(userId, ai);
 
-    return response.text;
+  const response = await chat.sendMessage({
+    message: prompt
+  }); 
 
-  } catch (error) {
+  return response.text;
 
-    if (retries > 0 && error.status === 503) {
-      console.log("Retrying AI request...");
-      await new Promise(r => setTimeout(r, 2000));
-      return askAI(prompt, retries - 1);
-    }
+} catch (error) {
 
-    return "⚠️ AI servers are busy. Try again in a moment.";
+  console.error("AI ERROR:", error);
+
+  const status =
+    error?.status ||
+    error?.response?.status ||
+    error?.code;
+
+  if (retries > 0 && status === 503) {
+    console.log("Retrying AI request...");
+    await new Promise(r => setTimeout(r, 2000));
+    return askAI(userId, prompt, retries - 1);
   }
+
+  return "⚠️ AI request failed. Please try again.";
+}
 }
 
 module.exports = {

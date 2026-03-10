@@ -16,7 +16,9 @@ module.exports = {
         const question = interaction.options.getString('question');
         await interaction.reply('🤔 Thinking...');
 
-        const answer = await askAI(question);
+        const userId= interaction.user.id;
+
+        const answer = await askAI(userId,question);
 
         const chunks = answer.match(/[\s\S]{1,2000}/g) || ["No response"];
 
