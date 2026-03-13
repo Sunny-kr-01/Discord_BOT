@@ -9,12 +9,27 @@ module.exports = {
             option.setName('question')
                 .setDescription('Your question')
                 .setRequired(true)
+        )
+        .addAttachmentOption(option =>
+            option.setName('file')
+                .setDescription('Optional file to provide context')
+                .setRequired(false)
         ),
 
     async execute(interaction) {
 
-        const question = interaction.options.getString('question');
-        await interaction.reply('🤔 Thinking...');
+        let question = interaction.options.getString('question');
+        await interaction.deferReply();
+
+        if (interaction.options.getAttachment('file')) {
+            const file = interaction.options.getAttachment('file');
+            console.log(file)
+        }
+        // if (interaction.options.getAttachment('file')) {
+        //     const file = interaction.options.getAttachment('file');
+        //     question += `\n\nContext from file (${file.name}): ${file.url}`;
+        //     console.log(interaction.options.getAttachment('file'))
+        // }
 
         const userId= interaction.user.id;
 

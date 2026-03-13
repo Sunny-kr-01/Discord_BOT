@@ -30,7 +30,9 @@ async function askAI(userId,prompt, retries = 2) {
     await new Promise(r => setTimeout(r, 2000));
     return askAI(userId, prompt, retries - 1);
   }
-
+  if(retries === 0){
+    return "⚠️ AI is currently facing high demand. Please try again later.";
+  }
   return "⚠️ AI request failed. Please try again.";
 }
 }
