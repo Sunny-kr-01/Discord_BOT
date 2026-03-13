@@ -11,4 +11,4 @@ async function downloadFile(url) {
     return buffer;
 }
 
-module.exports = downloadFile;
+module.exports ={ downloadFile };

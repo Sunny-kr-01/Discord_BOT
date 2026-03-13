@@ -1,42 +1,50 @@
 const { GoogleGenAI } = require("@google/genai");
-const {getChat}=require('./memory');
 
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY
 });
 
-async function askAI(userId,prompt, retries = 2) {
-  try {
+async function askAI(userId, question, fileData = null) {
 
-  const chat = getChat(userId, ai);
+    const parts = [];
 
-  const response = await chat.sendMessage({
-    message: prompt
-  }); 
+    // user question
+    parts.push({
+        text: question
+    });
 
-  return response.text;
+    if (fileData) {
 
-} catch (error) {
+        if (fileData.type === "image") {
 
-  console.error("AI ERROR:", error);
+            parts.push({
+                inlineData: {
+                    mimeType: fileData.mimeType,
+                    data: fileData.data
+                }
+            });
 
-  const status =
-    error?.status ||
-    error?.response?.status ||
-    error?.code;
+        }
 
-  if (retries > 0 && status === 503) {
-    console.log("Retrying AI request...");
-    await new Promise(r => setTimeout(r, 2000));
-    return askAI(userId, prompt, retries - 1);
-  }
-  if(retries === 0){
-    return "⚠️ AI is currently facing high demand. Please try again later.";
-  }
-  return "⚠️ AI request failed. Please try again.";
+        if (fileData.type === "text") {
+
+            parts.push({
+                text: `\nDocument Content:\n${fileData.content}`
+            });
+
+        }
+
+    }
+
+    const response = await ai.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: [{
+            role: "user",
+            parts: parts
+        }]
+    });
+
+    return response.text;
 }
-}
 
-module.exports = {
-  askAI,
-};
+module.exports = { askAI };
