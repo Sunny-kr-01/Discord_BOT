@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require('discord.js');
 const { askAI } = require('../services/aiService');
 const { downloadFile } = require('../utils/downloadFile');
-const imageProcessor=require('../processors/imageProcessor');
+const imageProcessor = require('../processors/imageProcessor');
 const pdfProcessor = require('../processors/pdfProcessor');
 const pptProcessor = require('../processors/pptProcessor');
 
@@ -22,44 +22,55 @@ module.exports = {
 
     async execute(interaction) {
 
-        let question = interaction.options.getString('question');
-        await interaction.deferReply();
+        try {
+            let question = interaction.options.getString('question');
+            await interaction.deferReply();
 
-        const file = interaction.options.getAttachment("file");
-        let processedData;
+            const file = interaction.options.getAttachment("file");
+            let processedData;
 
-        if (file) {
+            if (file) {
 
-            const buffer = await downloadFile(file.url);
+                const buffer = await downloadFile(file.url);
 
 
-            if (file.contentType.startsWith("image/")) {
-                processedData = await imageProcessor(buffer, file.contentType);
+                if (file.contentType.startsWith("image/")) {
+                    processedData = await imageProcessor(buffer, file.contentType);
+                }
+
+                else if (file.contentType === "application/pdf") {
+                    processedData = await pdfProcessor(buffer);
+                }
+
+                else if (
+                    file.contentType ===
+                    "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+                ) {
+                    processedData = await pptProcessor(buffer);
+                }
+
             }
 
-            else if (file.contentType === "application/pdf") {
-                processedData = await pdfProcessor(buffer);
+            const userId = interaction.user.id;
+
+            const answer = await askAI(userId, question, processedData);
+
+            const chunks = answer.match(/[\s\S]{1,2000}/g) || ["No response"];
+
+            await interaction.editReply(chunks.shift());
+
+            for (const chunk of chunks) {
+                await interaction.followUp(chunk);
+            }
+        } catch (error) {
+            console.error("AI COMMAND ERROR:", error);
+
+            if (interaction.deferred || interaction.replied) {
+                await interaction.editReply("⚠️ Something went wrong while processing your request.");
+            } else {
+                await interaction.reply("⚠️ Something went wrong while processing your request.");
             }
 
-            else if (
-                file.contentType ===
-                "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-            ) {
-                processedData = await pptProcessor(buffer);
-            }
-
-        }
-
-        const userId = interaction.user.id;
-
-        const answer = await askAI(userId, question, processedData);
-
-        const chunks = answer.match(/[\s\S]{1,2000}/g) || ["No response"];
-
-        await interaction.editReply(chunks.shift());
-
-        for (const chunk of chunks) {
-            await interaction.followUp(chunk);
         }
 
     }

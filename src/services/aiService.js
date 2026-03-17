@@ -1,7 +1,7 @@
 const { GoogleGenAI } = require("@google/genai");
 
 const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY
+    apiKey: process.env.GEMINI_API_KEY
 });
 
 async function askAI(userId, question, fileData = null) {
@@ -14,6 +14,27 @@ async function askAI(userId, question, fileData = null) {
     });
 
     if (fileData) {
+
+        if (fileData.type === "textChunks") {
+            let combinedAnswer = "";
+            for (const chunk of fileData.chunks) {
+
+                const response = await ai.models.generateContent({
+                    model: "gemini-3-flash-preview",
+                    contents: [{
+                        role: "user",
+                        parts: [
+                            { text: question },
+                            { text: chunk }
+                        ]
+                    }]
+                });
+
+                combinedAnswer += response.text + "\n\n";
+            }
+
+            return combinedAnswer;
+        }
 
         if (fileData.type === "image") {
 
