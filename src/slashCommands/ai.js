@@ -67,19 +67,55 @@ module.exports = {
             for (const chunk of chunks) {
                 await interaction.followUp(chunk);
             }
-        } catch (error) {
-            console.error("AI COMMAND ERROR:", error);
+        } 
+        catch (error) {
+    console.error("AI COMMAND ERROR:", error);
 
-            try {
-                if (interaction.deferred) {
-                    await interaction.editReply("⚠️ Something went wrong.");
-                } else if (!interaction.replied) {
-                    await interaction.reply("⚠️ Something went wrong.");
-                }
-            } catch (err) {
-                console.error("Reply failed:", err);
-            }
+    let errorMessage = "⚠️ Something went wrong.";
+
+    try {
+
+        if (error.message.includes("timeout")) {
+            errorMessage = "⏳ AI took too long to respond.";
         }
+
+        else if (
+            error.message.includes("quota") ||
+            error.message.includes("RESOURCE_EXHAUSTED")
+        ) {
+            errorMessage = "⚠️ AI quota reached. Try again later.";
+        }
+
+        else if (
+            error.message.includes("Unsupported file")
+        ) {
+            errorMessage = "📄 Unsupported file type.";
+        }
+
+        else if (
+            error.message.includes("File too large")
+        ) {
+            errorMessage = "📦 File too large.";
+        }
+
+        else if (
+            error.message.includes("API key")
+        ) {
+            errorMessage = "🔑 API configuration issue.";
+        }
+
+        if (interaction.deferred) {
+            await interaction.editReply(errorMessage);
+        }
+
+        else if (!interaction.replied) {
+            await interaction.reply(errorMessage);
+        }
+
+    } catch (err) {
+        console.error("Reply failed:", err);
+    }
+}
 
     }
 };
