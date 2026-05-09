@@ -46,6 +46,9 @@ process.on("uncaughtException", (error) => {
   console.error("Uncaught exception:", error);
 });
 
+console.log("TOKEN EXISTS:", !!process.env.BOT_TOKEN);
+console.log("TOKEN LENGTH:", process.env.BOT_TOKEN?.length);
+
 client.login(process.env.Bot_TOKEN);
 
 
