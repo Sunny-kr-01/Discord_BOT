@@ -1,68 +1,50 @@
 const { GoogleGenAI } = require("@google/genai");
+const { getChat } = require('./memory');
 
-const ai = new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY
-});
+function getAI() {
+    if (!process.env.GEMINI_API_KEY) {
+        throw new Error("Missing GEMINI_API_KEY");
+    }
+
+    return new GoogleGenAI({
+        apiKey: process.env.GEMINI_API_KEY
+    });
+}
 
 async function askAI(userId, question, fileData = null) {
-
-    const parts = [];
-
-    // user question
-    parts.push({
-        text: question
-    });
+    const ai = getAI();
+    const parts = [{ text: question }];
 
     if (fileData) {
 
         if (fileData.type === "textChunks") {
-            let combinedAnswer = "";
-            for (const chunk of fileData.chunks) {
+            const combinedText = fileData.chunks.join("\n\n");
 
-                const response = await ai.models.generateContent({
-                    model: "gemini-3-flash-preview",
-                    contents: [{
-                        role: "user",
-                        parts: [
-                            { text: question },
-                            { text: chunk }
-                        ]
-                    }]
-                });
-
-                combinedAnswer += response.text + "\n\n";
-            }
-
-            return combinedAnswer;
+            parts.push({
+                text: `\nDocument Content:\n${combinedText}`
+            });
         }
 
         if (fileData.type === "image") {
-
             parts.push({
                 inlineData: {
                     mimeType: fileData.mimeType,
                     data: fileData.data
                 }
             });
-
         }
 
         if (fileData.type === "text") {
-
             parts.push({
                 text: `\nDocument Content:\n${fileData.content}`
             });
-
         }
-
     }
 
-    const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [{
-            role: "user",
-            parts: parts
-        }]
+    const chat = getChat(userId, ai);
+
+    const response = await chat.sendMessage({
+    message: parts
     });
 
     return response.text;

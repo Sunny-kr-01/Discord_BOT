@@ -1,5 +1,4 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { askAI } = require('../services/aiService');
 const { downloadFile } = require('../utils/downloadFile');
 const imageProcessor = require('../processors/imageProcessor');
 const pdfProcessor = require('../processors/pdfProcessor');
@@ -21,6 +20,7 @@ module.exports = {
         ),
 
     async execute(interaction) {
+        const { askAI } = require('../services/aiService');
 
         try {
             let question = interaction.options.getString('question');
@@ -53,7 +53,12 @@ module.exports = {
 
             const userId = interaction.user.id;
 
-            const answer = await askAI(userId, question, processedData);
+            const answer = await Promise.race([
+                askAI(userId, question, processedData),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("AI timeout")), 15000)
+                )
+            ]);
 
             const chunks = answer.match(/[\s\S]{1,2000}/g) || ["No response"];
 
@@ -65,12 +70,15 @@ module.exports = {
         } catch (error) {
             console.error("AI COMMAND ERROR:", error);
 
-            if (interaction.deferred || interaction.replied) {
-                await interaction.editReply("⚠️ Something went wrong while processing your request.");
-            } else {
-                await interaction.reply("⚠️ Something went wrong while processing your request.");
+            try {
+                if (interaction.deferred) {
+                    await interaction.editReply("⚠️ Something went wrong.");
+                } else if (!interaction.replied) {
+                    await interaction.reply("⚠️ Something went wrong.");
+                }
+            } catch (err) {
+                console.error("Reply failed:", err);
             }
-
         }
 
     }

@@ -9,6 +9,5 @@ module.exports = async (client, interaction) => {
         await command.execute(interaction);
     } catch (error) {
         console.error(error);
-        await interaction.reply({ content: 'Error executing command', ephemeral: true });
     }
 };

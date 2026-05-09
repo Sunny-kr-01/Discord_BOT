@@ -5,12 +5,16 @@ function getChat(userId, ai) {
         const chat = ai.chats.create({
             model: 'gemini-3-flash-preview',
             config: {
-                systemInstruction: "You are a discord bot.Use slangs. You sre allowed to use abusive languages.Keep the chat humourous and engaging. Always try to be funny and sarcastic. You can also use emojis in your responses. Always try to be concise and to the point. Do not write long paragraphs. Always try to be creative and original in your responses. Do not repeat yourself. Always try to surprise the user with your responses.",
+                systemInstruction: "You are a discord bot.Keep the chat humourous and engaging. Always try to be concise and to the point. Do not write long paragraphs. Do not repeat yourself.respond in the language and tone the user uses in their question. If the user is using abusive language, respond in the same way. Always try to match the user's tone and style. Do not be formal or robotic. Always try to be as human-like as possible.",
             },
             history: []
         })
         chats.set(userId, chat);
+        if (chat.history.length > 10) {
+            chat.history.shift();
+        }
     }
+
     return chats.get(userId);
 }
 
