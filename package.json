@@ -22,6 +22,9 @@
     "pdf-parser": "^1.0.5",
     "pptx-parser": "^1.1.7-beta.9"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "devDependencies": {
     "nodemon": "^3.1.11"
   }
